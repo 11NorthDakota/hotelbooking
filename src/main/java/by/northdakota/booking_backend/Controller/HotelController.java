@@ -1,5 +1,6 @@
 package by.northdakota.booking_backend.Controller;
 
+import by.northdakota.booking_backend.Dto.HotelDto;
 import by.northdakota.booking_backend.Entity.Hotel;
 import by.northdakota.booking_backend.Entity.Review;
 import by.northdakota.booking_backend.Service.Interface.HotelService;
@@ -12,12 +13,12 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/hotels")
-public class HotelsController {
+public class HotelController {
 
     private final HotelService hotelService;
 
     @PostMapping
-    public ResponseEntity<?> addHotel(@RequestBody Hotel hotel) {
+    public ResponseEntity<?> addHotel(@RequestBody HotelDto hotel) {
         return hotelService.addHotel(hotel);
     }
 

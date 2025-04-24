@@ -2,13 +2,12 @@ package by.northdakota.booking_backend.Controller;
 
 
 import by.northdakota.booking_backend.Entity.Booking;
+import by.northdakota.booking_backend.RequestEntity.BookingRequest;
 import by.northdakota.booking_backend.Service.Interface.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -18,17 +17,17 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping
-    public ResponseEntity<List<Booking>> getAllBookings() {
+    public ResponseEntity<?> getAllBookings() {
         return bookingService.getAllBookings();
     }
 
     @GetMapping("/{bookingId}")
-    public ResponseEntity<Optional<Booking>> getBookingById(@PathVariable Long bookingId) {
+    public ResponseEntity<?> getBookingById(@PathVariable Long bookingId) {
         return bookingService.getBookingById(bookingId);
     }
 
     @PostMapping
-    public ResponseEntity<?> addBooking(@RequestBody Booking booking) {
+    public ResponseEntity<?> addBooking(@RequestBody BookingRequest booking) {
         return bookingService.addBooking(booking);
     }
 

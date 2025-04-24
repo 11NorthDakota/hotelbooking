@@ -6,26 +6,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name="Reviews")
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Review {
-
+@Getter
+@Setter
+@Table(name="booking_rooms")
+@Entity
+public class BookingRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="user_id")
-    private User user;
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 
     @ManyToOne
-    @JoinColumn(name="hotel_id")
-    private Hotel hotel;
-
-    private String message;
-
+    @JoinColumn(name = "room_id")
+    private Room room;
 }
