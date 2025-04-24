@@ -40,19 +40,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> saveUser(User user) {
-        // Для нового пользователя устанавливаем ID в null
         if (user.getId() != null && userRepository.existsById(user.getId())) {
             return new ResponseEntity<>(new AlreadyExistsException("user already exists"), HttpStatus.CONFLICT);
         }
-
-        // Для гарантированного создания нового пользователя
         user.setId(null);
-        user.setReviews(new ArrayList<>()); // Инициализируем пустой список
+        user.setReviews(new ArrayList<>());
 
         User savedUser = userRepository.save(user);
 
-        // Возвращаем сохраненного пользователя
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED); // Используем статус 201 Created
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
         @Override
