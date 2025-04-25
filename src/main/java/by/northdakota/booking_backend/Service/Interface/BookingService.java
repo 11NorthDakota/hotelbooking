@@ -1,7 +1,7 @@
 package by.northdakota.booking_backend.Service.Interface;
 
 import by.northdakota.booking_backend.Entity.Booking;
-import by.northdakota.booking_backend.RequestEntity.BookingRequest;
+import by.northdakota.booking_backend.Dto.BookingRequest;
 import org.springframework.http.ResponseEntity;
 
 

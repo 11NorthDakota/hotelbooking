@@ -1,4 +1,4 @@
-package by.northdakota.booking_backend.RequestEntity;
+package by.northdakota.booking_backend.Dto;
 
 import by.northdakota.booking_backend.Entity.GuestInfo;
 import lombok.AllArgsConstructor;

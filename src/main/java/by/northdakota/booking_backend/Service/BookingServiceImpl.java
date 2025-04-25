@@ -7,7 +7,7 @@ import by.northdakota.booking_backend.Exception.NotFoundException;
 import by.northdakota.booking_backend.Repository.BookingRepository;
 import by.northdakota.booking_backend.Repository.RoomRepository;
 import by.northdakota.booking_backend.Repository.UserRepository;
-import by.northdakota.booking_backend.RequestEntity.BookingRequest;
+import by.northdakota.booking_backend.Dto.BookingRequest;
 import by.northdakota.booking_backend.Service.Interface.BookingService;
 import by.northdakota.booking_backend.Util.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-@Service
 @RequiredArgsConstructor
+@Service
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -50,48 +49,40 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public ResponseEntity<?> addBooking(BookingRequest bookingRequest) {
-        // Проверка пользователя
         var userOpt = userRepository.findById(bookingRequest.getUserId());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new NotFoundException("User not found"));
         }
 
-        // Проверка комнат на существование
         List<Long> roomsId = bookingRequest.getRoomsId();
         List<Long> notFoundRooms = checkRoomForExistence(roomsId);
         if (!notFoundRooms.isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(notFoundRooms);
         }
 
-        // Проверка доступности
         if (!checkRoomIsAvailable(bookingRequest)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new AlreadyExistsException("Some rooms are not available"));
         }
 
-        // Создание бронирования
         Booking booking = new Booking(
                 null,
                 userOpt.get(),
-                new ArrayList<>(), // bookingRooms
+                new ArrayList<>(),
                 bookingRequest.getGuestInfo(),
                 bookingRequest.getCheckInDate(),
                 bookingRequest.getCheckOutDate(),
                 BookingStatus.NEW
         );
 
-        // Сохраняем booking, чтобы получить ID
         booking = bookingRepository.save(booking);
 
-        // Создаем связи booking-room
         Booking finalBooking = booking;
         List<BookingRoom> bookingRooms = roomsId.stream()
                 .map(roomId -> new BookingRoom(null, finalBooking, roomRepository.findById(roomId).orElseThrow()))
                 .collect(Collectors.toList());
 
-        // Добавляем в booking
         booking.setBookingRooms(bookingRooms);
 
-        // Сохраняем снова, если каскад настроен — или можно сохранить bookingRooms вручную
         booking = bookingRepository.save(booking);
 
         BookingDto bookingDto = mapper.bookingToDto(booking);
@@ -100,17 +91,35 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public ResponseEntity<?> deleteBooking(Long id) {
-        return null;
+        if (!bookingRepository.existsById(id)) {
+            return new ResponseEntity<>(new NotFoundException("booking not found"), HttpStatus.NOT_FOUND);
+        }
+        bookingRepository.deleteById(id);
+        return new ResponseEntity<>(id, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<?> updateBooking(Long id, Booking booking) {
-        return null;
+        if(!bookingRepository.existsById(id)) {
+            return new ResponseEntity<>(new NotFoundException("booking not found"), HttpStatus.NOT_FOUND);
+        }
+        booking.setId(id);
+        bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        BookingDto updatedBooking = mapper.bookingToDto(savedBooking);
+        return new ResponseEntity<>(updatedBooking, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<?> changeStatus(Long id, String status) {
-        return null;
+        if(!bookingRepository.existsById(id)) {
+            return new ResponseEntity<>(new NotFoundException("booking not found"), HttpStatus.NOT_FOUND);
+        }
+        Booking booking = bookingRepository.findById(id).get();
+        booking.setStatus(BookingStatus.valueOf(status));
+        Booking savedBooking = bookingRepository.save(booking);
+        BookingDto updatedBooking = mapper.bookingToDto(savedBooking);
+        return new ResponseEntity<>(updatedBooking, HttpStatus.OK);
     }
 
 

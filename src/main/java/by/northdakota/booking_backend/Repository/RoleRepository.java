@@ -1,15 +1,13 @@
 package by.northdakota.booking_backend.Repository;
 
-import by.northdakota.booking_backend.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import by.northdakota.booking_backend.Entity.Role;
 import java.util.Optional;
 
-
 @Repository
-public interface UserRepository extends JpaRepository<User,Long> {
+public interface RoleRepository extends JpaRepository<Role, Integer> {
 
-    Optional<User> findByName(String username);
+    Optional<Role> findByName(String name);
 
 }

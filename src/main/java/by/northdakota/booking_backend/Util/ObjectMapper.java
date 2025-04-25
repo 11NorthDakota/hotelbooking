@@ -1,11 +1,11 @@
 package by.northdakota.booking_backend.Util;
 
-import by.northdakota.booking_backend.Dto.BookingDto;
-import by.northdakota.booking_backend.Dto.HotelDto;
-import by.northdakota.booking_backend.Dto.RoomDto;
-import by.northdakota.booking_backend.Entity.Booking;
-import by.northdakota.booking_backend.Entity.Hotel;
-import by.northdakota.booking_backend.Entity.Room;
+
+import by.northdakota.booking_backend.Dto.*;
+import by.northdakota.booking_backend.Entity.*;
+import by.northdakota.booking_backend.Repository.HotelRepository;
+import by.northdakota.booking_backend.Repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -14,7 +14,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class ObjectMapper {
+
+    private final UserRepository userRepository;
+    private final HotelRepository hotelRepository;
 
     public RoomDto roomToDto(Room room) {
         return new RoomDto(
@@ -79,5 +83,35 @@ public class ObjectMapper {
         return hotel;
     }
 
+    public ReviewDto reviewToDto(Review review){
+        return new ReviewDto(
+                review.getId(),
+                review.getMessage(),
+                review.getUser().getId(),
+                review.getHotel().getId()
+        );
+    }
+    public Review dtoToReview(ReviewDto dto){
+        Review review = new Review();
+        review.setId(dto.getId());
+        review.setMessage(dto.getMessage());
+        review.setUser(userRepository.findById(dto.getUser_id()).get());
+        review.setHotel(hotelRepository.findById(dto.getHotel_id()).get());
+        return review;
+    }
+
+    public UserDto userToDto(User user){
+        return new UserDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getReviews().stream().map(
+                        this::reviewToDto
+                ).toList(),
+                user.getRole().stream().map(
+                        Role::getName
+                ).toList()
+        );
+    }
 
 }

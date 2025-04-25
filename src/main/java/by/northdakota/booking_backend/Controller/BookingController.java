@@ -2,7 +2,7 @@ package by.northdakota.booking_backend.Controller;
 
 
 import by.northdakota.booking_backend.Entity.Booking;
-import by.northdakota.booking_backend.RequestEntity.BookingRequest;
+import by.northdakota.booking_backend.Dto.BookingRequest;
 import by.northdakota.booking_backend.Service.Interface.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping
+
     public ResponseEntity<?> getAllBookings() {
         return bookingService.getAllBookings();
     }

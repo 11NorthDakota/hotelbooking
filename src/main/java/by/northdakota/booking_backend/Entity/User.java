@@ -4,6 +4,7 @@ package by.northdakota.booking_backend.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -21,9 +22,18 @@ public class User {
     private String password;
     private String email;
     private String phoneNumber;
-    @Enumerated(EnumType.STRING)
-    private Role role;
+
+    @ManyToMany
+    @JoinTable(
+            name="users_roles",
+            joinColumns = @JoinColumn(name="user_id"),
+            inverseJoinColumns = @JoinColumn(name="role_id")
+
+    )
+    private Collection<Role> role;
+
     private boolean isBlocked = false;
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
     private List<Review> reviews;
 }
