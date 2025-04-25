@@ -1,7 +1,11 @@
 package by.northdakota.booking_backend.Controller;
 
-import by.northdakota.booking_backend.Entity.User;
+import by.northdakota.booking_backend.Dto.UserDto;
 import by.northdakota.booking_backend.Service.Interface.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,33 +13,56 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Пользователи", description = "Методы для управления пользователями")
 public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "Получить список всех пользователей")
+    @ApiResponse(responseCode = "200", description = "Список пользователей получен успешно")
     @GetMapping
     public ResponseEntity<?> getUsers() {
         return userService.getAllUsers();
     }
 
+    @Operation(summary = "Получить пользователя по ID")
+    @ApiResponse(responseCode = "200", description = "Пользователь найден")
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUser(@PathVariable Long userId) {
+    public ResponseEntity<?> getUser(
+            @Parameter(description = "ID пользователя", example = "1")
+            @PathVariable Long userId) {
         return userService.getUserById(userId);
     }
 
+    @Operation(summary = "Добавить нового пользователя")
+    @ApiResponse(responseCode = "201", description = "Пользователь успешно создан")
+    @ApiResponse(responseCode = "409", description = "Пользователь уже существует")
     @PostMapping("/add")
-    public ResponseEntity<?> addUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public ResponseEntity<?> addUser(
+            @Parameter(description = "Данные пользователя")
+            @RequestBody UserDto userDto) {
+        return userService.saveUser(userDto);
     }
 
+    @Operation(summary = "Заблокировать пользователя по ID")
+    @ApiResponse(responseCode = "200", description = "Пользователь заблокирован")
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     @PutMapping("/{userId}/block")
-    public ResponseEntity<?> blockUser(@PathVariable Long userId) {
+    public ResponseEntity<?> blockUser(
+            @Parameter(description = "ID пользователя", example = "1")
+            @PathVariable Long userId) {
         return userService.blockUser(userId);
     }
 
+    @Operation(summary = "Разблокировать пользователя по ID")
+    @ApiResponse(responseCode = "200", description = "Пользователь разблокирован")
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     @PutMapping("/{userId}/unblock")
-    public ResponseEntity<?> unblockUser(@PathVariable Long userId) {
+    public ResponseEntity<?> unblockUser(
+            @Parameter(description = "ID пользователя", example = "1")
+            @PathVariable Long userId) {
         return userService.unblockUser(userId);
     }
-
 }
+

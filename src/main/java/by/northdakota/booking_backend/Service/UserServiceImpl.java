@@ -71,15 +71,13 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity<?> saveUser(User user) {
-        if (user.getId() != null && userRepository.existsById(user.getId())) {
+    public ResponseEntity<?> saveUser(UserDto userDto) {
+        if (userRepository.findByName(userDto.getUsername()).isPresent() && userRepository.existsById(userDto.getId())) {
             return new ResponseEntity<>(new AlreadyExistsException("user already exists"), HttpStatus.CONFLICT);
         }
-        user.setId(null);
-        user.setReviews(new ArrayList<>());
-
-        User savedUser = userRepository.save(user);
-        UserDto userDto = mapper.userToDto(savedUser);
+        User user = mapper.dtoToUser(userDto);
+        user = userRepository.save(user);
+        userDto = mapper.userToDto(user);
 
         return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }

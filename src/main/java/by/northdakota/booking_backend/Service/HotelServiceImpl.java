@@ -1,6 +1,7 @@
 package by.northdakota.booking_backend.Service;
 
 import by.northdakota.booking_backend.Dto.HotelDto;
+import by.northdakota.booking_backend.Dto.ReviewDto;
 import by.northdakota.booking_backend.Dto.RoomDto;
 import by.northdakota.booking_backend.Entity.Booking;
 import by.northdakota.booking_backend.Entity.Hotel;
@@ -67,12 +68,13 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public ResponseEntity<?> updateHotel(Long hotelId, Hotel hotel) {
+    public ResponseEntity<?> updateHotel(Long hotelId, HotelDto hotelDto) {
         if (!hotelRepository.existsById(hotelId)) {
             return new ResponseEntity<>(new NotFoundException("hotel not found"), HttpStatus.NOT_FOUND);
         }
-        hotelRepository.save(hotel);
-        HotelDto hotelDto = mapper.hotelToDto(hotel);
+        Hotel hotel = mapper.dtoToHotel(hotelDto);
+        hotel = hotelRepository.save(hotel);
+        HotelDto newhotelDto = mapper.hotelToDto(hotel);
         return new ResponseEntity<>(hotelDto, HttpStatus.OK);
     }
 
@@ -89,26 +91,21 @@ public class HotelServiceImpl implements HotelService {
     public ResponseEntity<?> getAvailableRoomsInHotelByDate(Long hotelId,
                                                             @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime checkIn,
                                                             @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime checkOut) {
-        // 1. Все комнаты отеля
         List<Room> allRooms = roomRepository.findByHotelId(hotelId);
 
         if (allRooms.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Hotel not found or no rooms.");
         }
 
-        // 2. Список всех room.id
         List<Long> roomIds = allRooms.stream().map(Room::getId).toList();
 
-        // 3. Занятые бронирования
         List<Booking> conflictingBookings = bookingRepository.findConflictingBookings(roomIds, checkIn, checkOut);
 
-        // 4. Занятые комнаты
         Set<Long> bookedRoomIds = conflictingBookings.stream()
                 .flatMap(booking -> booking.getBookingRooms().stream())
                 .map(bookingRoom -> bookingRoom.getRoom().getId())
                 .collect(Collectors.toSet());
 
-        // 5. Свободные комнаты
         List<Room> availableRooms = allRooms.stream()
                 .filter(room -> !bookedRoomIds.contains(room.getId()))
                 .toList();
@@ -126,11 +123,12 @@ public class HotelServiceImpl implements HotelService {
         List<Review> reviews = hotels.stream()
                 .flatMap(hotel->hotel.getReviews().stream())
                 .toList();
-        return new ResponseEntity<>(reviews, HttpStatus.OK);
+        List<ReviewDto> reviewsDto = reviews.stream().map(mapper::reviewToDto).toList();
+        return new ResponseEntity<>(reviewsDto, HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<?> addHotelReview(Long hotelId, Review review) {
+    public ResponseEntity<?> addHotelReview(Long hotelId, ReviewDto review) {
         if(!hotelRepository.existsById(hotelId)) {
             return new ResponseEntity<>(new NotFoundException("hotel not found"), HttpStatus.NOT_FOUND);
         }
@@ -138,8 +136,9 @@ public class HotelServiceImpl implements HotelService {
         if(hotelOpt.isEmpty()){
             return new ResponseEntity<>(new NotFoundException("hotel not found"), HttpStatus.I_AM_A_TEAPOT);
         }
+        Review rev = mapper.dtoToReview(review);
         Hotel hotel =  hotelOpt.get();
-        hotel.getReviews().add(review);
+        hotel.getReviews().add(rev);
         hotelRepository.save(hotel);
         HotelDto hotelDto = mapper.hotelToDto(hotel);
         return new ResponseEntity<>(hotelDto, HttpStatus.OK);

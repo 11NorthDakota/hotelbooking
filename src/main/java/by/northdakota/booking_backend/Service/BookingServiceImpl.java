@@ -99,12 +99,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public ResponseEntity<?> updateBooking(Long id, Booking booking) {
+    public ResponseEntity<?> updateBooking(Long id, BookingDto bookingDto) {
         if(!bookingRepository.existsById(id)) {
             return new ResponseEntity<>(new NotFoundException("booking not found"), HttpStatus.NOT_FOUND);
         }
+        Booking booking = mapper.dtoToBooking(bookingDto);
         booking.setId(id);
-        bookingRepository.save(booking);
         Booking savedBooking = bookingRepository.save(booking);
         BookingDto updatedBooking = mapper.bookingToDto(savedBooking);
         return new ResponseEntity<>(updatedBooking, HttpStatus.OK);

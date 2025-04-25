@@ -4,6 +4,8 @@ package by.northdakota.booking_backend.Util;
 import by.northdakota.booking_backend.Dto.*;
 import by.northdakota.booking_backend.Entity.*;
 import by.northdakota.booking_backend.Repository.HotelRepository;
+import by.northdakota.booking_backend.Repository.RoleRepository;
+import by.northdakota.booking_backend.Repository.RoomRepository;
 import by.northdakota.booking_backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,8 @@ public class ObjectMapper {
 
     private final UserRepository userRepository;
     private final HotelRepository hotelRepository;
+    private final RoomRepository roomRepository;
+    private final RoleRepository roleRepository;
 
     public RoomDto roomToDto(Room room) {
         return new RoomDto(
@@ -64,8 +68,39 @@ public class ObjectMapper {
                         .collect(Collectors.toList()),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
-                booking.getStatus().name()
+                booking.getStatus().name(),
+                booking.getGuestInfo().getNumOfAdults(),
+                booking.getGuestInfo().getNumOfChildren()
         );
+    }
+
+    public Booking dtoToBooking(BookingDto bookingDto){
+        User user = userRepository.findById(bookingDto.getUserId()).get();
+
+        Booking booking = new Booking();
+
+        booking.setId(bookingDto.getId());
+        booking.setUser(user);
+        booking.setCheckInDate(bookingDto.getCheckInDate());
+        booking.setCheckOutDate(bookingDto.getCheckOutDate());
+        booking.setStatus(BookingStatus.valueOf(bookingDto.getStatus()));
+
+        List<BookingRoom> bookingRooms = new ArrayList<>();
+        if (bookingDto.getRoomIds() != null && !bookingDto.getRoomIds().isEmpty()) {
+            for (Long roomId : bookingDto.getRoomIds()) {
+                Room room = roomRepository.findById(roomId).get();
+                BookingRoom bookingRoom = new BookingRoom();
+                bookingRoom.setBooking(booking);
+                bookingRoom.setRoom(room);
+                bookingRooms.add(bookingRoom);
+            }
+        }
+        booking.setBookingRooms(bookingRooms);
+        GuestInfo gInfo = new GuestInfo();
+        gInfo.setNumOfAdults(bookingDto.getNumOfAdults());
+        gInfo.setNumOfChildren(bookingDto.getNumOfChildren());
+        booking.setGuestInfo(gInfo);
+        return booking;
     }
 
     public Hotel dtoToHotel(HotelDto dto){
@@ -110,8 +145,37 @@ public class ObjectMapper {
                 ).toList(),
                 user.getRole().stream().map(
                         Role::getName
-                ).toList()
+                ).toList(),
+                user.getPhoneNumber()
         );
     }
 
+    public User dtoToUser(UserDto userDto) {
+        User user = userRepository.findById(userDto.getId()).get();
+        user.setId(userDto.getId());
+        user.setName(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setPhoneNumber(userDto.getPhoneNumber());
+
+        if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
+            List<Role> roles = new ArrayList<>();
+            for (String roleName : userDto.getRole()) {
+                Role role = roleRepository.findByName(roleName).get();
+                roles.add(role);
+            }
+            user.setRole(roles);
+        }
+
+        if (userDto.getReview() != null && !userDto.getReview().isEmpty()) {
+            List<Review> reviews = new ArrayList<>();
+            for (ReviewDto reviewDto : userDto.getReview()) {
+                Review review = dtoToReview(reviewDto);
+                review.setUser(user);
+                reviews.add(review);
+            }
+            user.setReviews(reviews);
+        }
+
+        return user;
+    }
 }
