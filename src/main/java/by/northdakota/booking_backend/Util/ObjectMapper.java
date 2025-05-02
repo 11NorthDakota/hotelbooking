@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -136,13 +137,21 @@ public class ObjectMapper {
     }
 
     public UserDto userToDto(User user){
+        List<ReviewDto> review;
+        if(user.getReviews() == null){
+            review = new ArrayList<>();
+        }
+        else {
+            review = user.getReviews().stream().map(
+                    this::reviewToDto
+            ).toList();
+        }
+
         return new UserDto(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getReviews().stream().map(
-                        this::reviewToDto
-                ).toList(),
+                review,
                 user.getRole().stream().map(
                         Role::getName
                 ).toList(),

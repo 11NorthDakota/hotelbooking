@@ -2,7 +2,6 @@ package by.northdakota.booking_backend.Controller;
 
 
 import by.northdakota.booking_backend.Dto.BookingDto;
-import by.northdakota.booking_backend.Entity.Booking;
 import by.northdakota.booking_backend.Dto.BookingRequest;
 import by.northdakota.booking_backend.Service.Interface.BookingService;
 import io.swagger.v3.oas.annotations.Operation;

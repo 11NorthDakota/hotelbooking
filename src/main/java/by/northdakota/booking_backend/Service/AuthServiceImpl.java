@@ -5,6 +5,7 @@ import by.northdakota.booking_backend.Dto.LoginUserDto;
 import by.northdakota.booking_backend.Dto.RegistrationUserDto;
 import by.northdakota.booking_backend.Dto.UserDto;
 import by.northdakota.booking_backend.Exception.AppError;
+import by.northdakota.booking_backend.Repository.UserRepository;
 import by.northdakota.booking_backend.Service.Interface.AuthService;
 import by.northdakota.booking_backend.Service.Interface.UserService;
 import by.northdakota.booking_backend.Util.JwtTokenUtil;
@@ -18,6 +19,10 @@ import by.northdakota.booking_backend.Entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import by.northdakota.booking_backend.Entity.Role;
+
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,9 +30,12 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final JwtTokenUtil jwtTokenUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
 
     public ResponseEntity<?> createAuthToken(@RequestBody LoginUserDto loginUserDto) throws Exception {
         try{
+            System.out.println(loginUserDto.getUsername());
+            System.out.println(loginUserDto.getPassword());
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginUserDto.getUsername(), loginUserDto.getPassword()));
         }catch (BadCredentialsException e){
@@ -36,11 +44,14 @@ public class AuthServiceImpl implements AuthService {
         }
         UserDetails userDetails = userService.loadUserByUsername(loginUserDto.getUsername());
         String token = jwtTokenUtil.generateToken(userDetails);
-        return new ResponseEntity<>(new JwtResponse(token), HttpStatus.OK);
+        Collection<Role> role = userRepository.findByName(loginUserDto.getUsername()).get().getRole();
+        return new ResponseEntity<>(new JwtResponse(token,role), HttpStatus.OK);
     }
 
     public ResponseEntity<?> createNewUser(@RequestBody RegistrationUserDto registrationUserDto) {
-        if(registrationUserDto.getPassword().equals(registrationUserDto.getConfirmPassword())){
+        System.out.println(registrationUserDto.getPassword());
+        System.out.println(registrationUserDto.getConfirmPassword());
+        if(!registrationUserDto.getPassword().equals(registrationUserDto.getConfirmPassword())){
             return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),"пароли не совпали"),
                     HttpStatus.BAD_REQUEST);
         }
@@ -49,12 +60,7 @@ public class AuthServiceImpl implements AuthService {
             return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),"Пользователь существует"),
                     HttpStatus.BAD_REQUEST);
         }
-        User user = (User) userService.createUser(registrationUserDto).getBody();
-        UserDto userDto = new UserDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail()
-        );
+        UserDto userDto = (UserDto) userService.createUser(registrationUserDto).getBody();
         return ResponseEntity.ok(userDto);
     }
 

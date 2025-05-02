@@ -2,7 +2,6 @@ package by.northdakota.booking_backend.Controller;
 
 import by.northdakota.booking_backend.Dto.HotelDto;
 import by.northdakota.booking_backend.Dto.ReviewDto;
-import by.northdakota.booking_backend.Entity.Hotel;
 import by.northdakota.booking_backend.Service.Interface.HotelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,8 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hotels")

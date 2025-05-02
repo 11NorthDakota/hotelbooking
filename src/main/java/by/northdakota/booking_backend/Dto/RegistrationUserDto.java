@@ -14,8 +14,6 @@ import lombok.Setter;
 @Schema(description = "DTO регистрации пользователя")
 public class RegistrationUserDto {
 
-    @Schema(description = "ID пользователя", example = "1")
-    private Long id;
 
     @Schema(description = "Имя пользователя", example = "john_doe")
     private String name;
