@@ -1,6 +1,9 @@
 package by.northdakota.booking_backend.Dto;
 
 import by.northdakota.booking_backend.Entity.GuestInfo;
+import by.northdakota.booking_backend.Util.DateDeserializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,8 +30,10 @@ public class BookingRequest {
     private GuestInfo guestInfo;
 
     @Schema(description = "Дата и время заезда", example = "2025-05-01T14:00:00", required = true)
+    @JsonDeserialize(using = DateDeserializer.class)
     private LocalDateTime checkInDate;
 
     @Schema(description = "Дата и время выезда", example = "2025-05-10T12:00:00", required = true)
+    @JsonDeserialize(using = DateDeserializer.class)
     private LocalDateTime checkOutDate;
 }

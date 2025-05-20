@@ -2,11 +2,13 @@ package by.northdakota.booking_backend.Service;
 
 import by.northdakota.booking_backend.Dto.RegistrationUserDto;
 import by.northdakota.booking_backend.Dto.UserDto;
+import by.northdakota.booking_backend.Dto.UserUpdateDto;
 import by.northdakota.booking_backend.Entity.User;
 import by.northdakota.booking_backend.Exception.AlreadyExistsException;
 import by.northdakota.booking_backend.Exception.NotFoundException;
 import by.northdakota.booking_backend.Repository.UserRepository;
 import by.northdakota.booking_backend.Service.Interface.UserService;
+import by.northdakota.booking_backend.Util.JwtTokenUtil;
 import by.northdakota.booking_backend.Util.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,18 +31,20 @@ public class UserServiceImpl implements UserService {
     private final RoleServiceImpl roleServiceImpl;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper mapper;
+    private final JwtTokenUtil jwtTokenUtil;
 
     public Optional<User> findByUsername(String username){
         return userRepository.findByName(username);
     }
 
+    @Transactional
     @Override
     public ResponseEntity<?> getAllUsers() {
         List<User> users = userRepository.findAll();
         List<UserDto> usersDto = users.stream().map(mapper::userToDto).toList();
         return new ResponseEntity<>(usersDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> getUserById(Long userId) {
         if(!userRepository.existsById(userId)) return new ResponseEntity<>(new NotFoundException("user not found"),HttpStatus.NOT_FOUND);
@@ -51,7 +55,8 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = mapper.userToDto(user.get());
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
-
+    @Transactional
+    @Override
     public ResponseEntity<?> createUser(RegistrationUserDto registrationUserDto) {
         if(userRepository.findByName(registrationUserDto.getName()).isPresent()){
             return new ResponseEntity<>(new AlreadyExistsException("username already exists"),HttpStatus.CONFLICT);
@@ -66,22 +71,15 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = mapper.userToDto(user);
         return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }
-
-
-
-    @Override
-    public ResponseEntity<?> saveUser(UserDto userDto) {
-        if (userRepository.findByName(userDto.getUsername()).isPresent() && userRepository.existsById(userDto.getId())) {
-            return new ResponseEntity<>(new AlreadyExistsException("user already exists"), HttpStatus.CONFLICT);
-        }
-        User user = mapper.dtoToUser(userDto);
-        user = userRepository.save(user);
-        userDto = mapper.userToDto(user);
-
-        return new ResponseEntity<>(userDto, HttpStatus.CREATED);
+    @Transactional
+    public ResponseEntity<?> getActiveUser(String token){
+       String username = jwtTokenUtil.getUsername(token);
+       User user = userRepository.findByName(username).get();
+       UserDto userDto = mapper.userToDto(user);
+       return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
-
-        @Override
+    @Transactional
+    @Override
     public ResponseEntity<?> blockUser(Long userId) {
        if(!userRepository.existsById(userId)) {
            return new ResponseEntity<>(new NotFoundException("user not found"),HttpStatus.NOT_FOUND);
@@ -97,7 +95,7 @@ public class UserServiceImpl implements UserService {
        UserDto userDto = mapper.userToDto(user);
        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> unblockUser(Long userId) {
         if(!userRepository.existsById(userId)) {
@@ -114,7 +112,23 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = mapper.userToDto(user);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
-
+    @Transactional
+    @Override
+    public ResponseEntity<?> deleteUser(Long userId){
+        userRepository.deleteById(userId);
+        return ResponseEntity.ok().build();
+    }
+    @Transactional
+    @Override
+    public ResponseEntity<?> updateUser(Long userId, UserUpdateDto userDto){
+        User user = userRepository.findById(userId).get();
+        user.setName(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setPhoneNumber(userDto.getPhoneNumber());
+        User updatedUser = userRepository.save(user);
+        UserDto updatedUserDto = mapper.userToDto(updatedUser);
+        return new ResponseEntity<>(updatedUserDto, HttpStatus.OK);
+    }
 
     @Override
     @Transactional
@@ -131,4 +145,6 @@ public class UserServiceImpl implements UserService {
                         .toList()
         );
     }
+
+
 }

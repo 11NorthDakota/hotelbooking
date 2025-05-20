@@ -38,6 +38,12 @@ public class UserDto {
         this.email = email;
     }
 
+    public UserDto(String username,String email, String phoneNumber) {
+        this.username = username;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+    }
+
     public UserDto(Long id, String username, String email, List<String> role) {
         this.id = id;
         this.username = username;

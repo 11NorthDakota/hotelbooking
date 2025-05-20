@@ -56,7 +56,6 @@ public class JwtTokenUtil {
         return getAllClaimsFromToken(token).get("roles", List.class);
     }
 
-
     private Claims getAllClaimsFromToken(String token){
         return Jwts.parser()
                 .verifyWith(getSecretKey())
@@ -65,13 +64,8 @@ public class JwtTokenUtil {
                 .getPayload();
     }
 
-
-
-
     private SecretKey getSecretKey() {
         byte[] keyBytes = Decoders.BASE64URL.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-
 }

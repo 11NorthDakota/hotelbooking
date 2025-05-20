@@ -18,17 +18,13 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
-
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<BookingRoom> bookingRooms = new ArrayList<>();
-
     @Embedded
     private GuestInfo guestInfo;
-
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;
 

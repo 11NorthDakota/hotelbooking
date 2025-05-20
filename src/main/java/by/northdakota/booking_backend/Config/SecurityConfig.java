@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,18 +30,25 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(
                         auth -> auth
-                                .anyRequest().permitAll()
+                                .requestMatchers("/api/booking/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/hotels/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/rooms/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/users/{userId}").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/users/current_user/{token}").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/").permitAll()
+                                .requestMatchers("/api/auth/**").permitAll()
+                                .anyRequest().hasRole("ADMIN")
                 )
                 .exceptionHandling(
                         exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class
-                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

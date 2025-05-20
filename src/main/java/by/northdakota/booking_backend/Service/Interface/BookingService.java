@@ -13,4 +13,5 @@ public interface BookingService {
     ResponseEntity<?> deleteBooking(Long id);
     ResponseEntity<?> updateBooking(Long id, BookingDto bookingDto);
     ResponseEntity<?> changeStatus(Long id,String status);
+    ResponseEntity<?> getUserBookings(Long id);
 }

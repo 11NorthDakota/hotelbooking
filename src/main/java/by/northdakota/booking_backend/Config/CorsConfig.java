@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // Разрешить все запросы на /api/*
+        registry.addMapping("/**") // Разрешить все запросы на /api/*
                 .allowedOrigins("http://localhost:3000") // Разрешить запросы с фронтенда
                 .allowedMethods("GET", "POST", "PUT", "DELETE") // Разрешить методы
                 .allowCredentials(true); // Разрешить отправку куки

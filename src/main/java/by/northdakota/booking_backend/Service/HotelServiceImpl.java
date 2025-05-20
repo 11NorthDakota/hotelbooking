@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,7 @@ public class HotelServiceImpl implements HotelService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
 
+    @Transactional
     @Override
     public ResponseEntity<List<HotelDto>> getAllHotels() {
         List<HotelDto> hotels = hotelRepository.findAll().stream()
@@ -44,7 +46,7 @@ public class HotelServiceImpl implements HotelService {
 
         return new ResponseEntity<>(hotels, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> getHotelById(Long HotelId) {
         Optional<Hotel> hotel = hotelRepository.findById(HotelId);
@@ -54,7 +56,7 @@ public class HotelServiceImpl implements HotelService {
         HotelDto hotelDto = mapper.hotelToDto(hotel.get());
         return new ResponseEntity<>(hotelDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> addHotel(HotelDto hotelDto) {
         Hotel hotel = mapper.dtoToHotel(hotelDto);
@@ -66,7 +68,7 @@ public class HotelServiceImpl implements HotelService {
         hotelDto = mapper.hotelToDto(hotel);
         return new ResponseEntity<>(hotelDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> updateHotel(Long hotelId, HotelDto hotelDto) {
         if (!hotelRepository.existsById(hotelId)) {
@@ -77,7 +79,7 @@ public class HotelServiceImpl implements HotelService {
         HotelDto newhotelDto = mapper.hotelToDto(hotel);
         return new ResponseEntity<>(hotelDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> deleteHotel(Long hotelId) {
         if (!hotelRepository.existsById(hotelId)) {
@@ -86,7 +88,7 @@ public class HotelServiceImpl implements HotelService {
         hotelRepository.deleteById(hotelId);
         return new ResponseEntity<>(hotelId, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> getAvailableRoomsInHotelByDate(Long hotelId,
                                                             @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime checkIn,
@@ -113,20 +115,18 @@ public class HotelServiceImpl implements HotelService {
         return ResponseEntity.ok(roomDtos);
     }
 
-
+    @Transactional
     @Override
     public ResponseEntity<?> getAllHotelReviews(Long hotelId) {
         if(!hotelRepository.existsById(hotelId)) {
             return new ResponseEntity<>(new NotFoundException("hotel not found"), HttpStatus.NOT_FOUND);
         }
-        List<Hotel> hotels = hotelRepository.findAll();
-        List<Review> reviews = hotels.stream()
-                .flatMap(hotel->hotel.getReviews().stream())
-                .toList();
+        Hotel hotel = hotelRepository.findById(hotelId).get();
+        List<Review> reviews = hotel.getReviews();
         List<ReviewDto> reviewsDto = reviews.stream().map(mapper::reviewToDto).toList();
         return new ResponseEntity<>(reviewsDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> addHotelReview(Long hotelId, ReviewDto review) {
         if(!hotelRepository.existsById(hotelId)) {

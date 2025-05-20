@@ -14,6 +14,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByHotelId(Long hotelId);
 
+    @Override
+    List<Room> findAllById(Iterable<Long> longs);
+
     @Query("SELECT r.id FROM Room r WHERE r.id IN :roomIds")
     Set<Long> findExistingIds(@Param("roomIds") List<Long> roomIds);
 

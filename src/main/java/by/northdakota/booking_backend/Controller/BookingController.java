@@ -95,4 +95,10 @@ public class BookingController {
             @Parameter(description = "Новый статус (например, CONFIRMED, CANCELLED)") @PathVariable String status) {
         return bookingService.changeStatus(bookingId, status);
     }
+
+    @GetMapping("/{userId}/bookings")
+    public ResponseEntity<?> getUserBookings(@PathVariable Long userId){
+        return bookingService.getUserBookings(userId);
+    }
+
 }

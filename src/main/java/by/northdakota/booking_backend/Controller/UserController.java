@@ -1,6 +1,7 @@
 package by.northdakota.booking_backend.Controller;
 
 import by.northdakota.booking_backend.Dto.UserDto;
+import by.northdakota.booking_backend.Dto.UserUpdateDto;
 import by.northdakota.booking_backend.Service.Interface.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,16 +36,6 @@ public class UserController {
         return userService.getUserById(userId);
     }
 
-    @Operation(summary = "Добавить нового пользователя")
-    @ApiResponse(responseCode = "201", description = "Пользователь успешно создан")
-    @ApiResponse(responseCode = "409", description = "Пользователь уже существует")
-    @PostMapping("/add")
-    public ResponseEntity<?> addUser(
-            @Parameter(description = "Данные пользователя")
-            @RequestBody UserDto userDto) {
-        return userService.saveUser(userDto);
-    }
-
     @Operation(summary = "Заблокировать пользователя по ID")
     @ApiResponse(responseCode = "200", description = "Пользователь заблокирован")
     @ApiResponse(responseCode = "404", description = "Пользователь не найден")
@@ -64,5 +55,21 @@ public class UserController {
             @PathVariable Long userId) {
         return userService.unblockUser(userId);
     }
+
+    @GetMapping("/current_user/{token}")
+    public ResponseEntity<?> getActiveUser(@PathVariable String token){
+        return userService.getActiveUser(token);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId){
+        return userService.deleteUser(userId);
+    }
+
+    @PutMapping("/change/{userId}")
+    public ResponseEntity<?> changeUser(@PathVariable Long userId, @RequestBody UserUpdateDto userDto){
+        return userService.updateUser(userId, userDto);
+    }
+
 }
 

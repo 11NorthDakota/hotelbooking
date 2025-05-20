@@ -5,6 +5,7 @@ import by.northdakota.booking_backend.Entity.*;
 import by.northdakota.booking_backend.Exception.AlreadyExistsException;
 import by.northdakota.booking_backend.Exception.NotFoundException;
 import by.northdakota.booking_backend.Repository.BookingRepository;
+import by.northdakota.booking_backend.Repository.BookingRoomsRepository;
 import by.northdakota.booking_backend.Repository.RoomRepository;
 import by.northdakota.booking_backend.Repository.UserRepository;
 import by.northdakota.booking_backend.Dto.BookingRequest;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,7 +27,8 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final ObjectMapper mapper;
-
+    private final BookingRoomsRepository bookingRoomsRepository;
+    @Transactional
     @Override
     public ResponseEntity<?> getAllBookings() {
         List<Booking> bookings = bookingRepository.findAll();
@@ -33,7 +36,7 @@ public class BookingServiceImpl implements BookingService {
                 .map(mapper::bookingToDto).toList();
         return new ResponseEntity<>(bookingDtos, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> getBookingById(Long id) {
         if (!bookingRepository.existsById(id)) {
@@ -46,24 +49,17 @@ public class BookingServiceImpl implements BookingService {
         BookingDto bookingDto = mapper.bookingToDto(booking.get());
         return new ResponseEntity<>(bookingDto, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> addBooking(BookingRequest bookingRequest) {
-        var userOpt = userRepository.findById(bookingRequest.getUserId());
+        Optional<User> userOpt = userRepository.findById(bookingRequest.getUserId());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new NotFoundException("User not found"));
         }
-
         List<Long> roomsId = bookingRequest.getRoomsId();
         List<Long> notFoundRooms = checkRoomForExistence(roomsId);
-        if (!notFoundRooms.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(notFoundRooms);
-        }
-
-        if (!checkRoomIsAvailable(bookingRequest)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new AlreadyExistsException("Some rooms are not available"));
-        }
-
+        if (!notFoundRooms.isEmpty()) {return ResponseEntity.status(HttpStatus.CONFLICT).body(notFoundRooms);}
+        if (!checkRoomIsAvailable(bookingRequest)) {return ResponseEntity.status(HttpStatus.CONFLICT).body(new AlreadyExistsException("Some rooms are not available"));}
         Booking booking = new Booking(
                 null,
                 userOpt.get(),
@@ -73,22 +69,18 @@ public class BookingServiceImpl implements BookingService {
                 bookingRequest.getCheckOutDate(),
                 BookingStatus.NEW
         );
-
-        booking = bookingRepository.save(booking);
-
         Booking finalBooking = booking;
         List<BookingRoom> bookingRooms = roomsId.stream()
                 .map(roomId -> new BookingRoom(null, finalBooking, roomRepository.findById(roomId).orElseThrow()))
                 .collect(Collectors.toList());
-
         booking.setBookingRooms(bookingRooms);
-
         booking = bookingRepository.save(booking);
+        bookingRoomsRepository.saveAll(bookingRooms);
 
         BookingDto bookingDto = mapper.bookingToDto(booking);
         return ResponseEntity.status(HttpStatus.CREATED).body(bookingDto);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> deleteBooking(Long id) {
         if (!bookingRepository.existsById(id)) {
@@ -97,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.deleteById(id);
         return new ResponseEntity<>(id, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> updateBooking(Long id, BookingDto bookingDto) {
         if(!bookingRepository.existsById(id)) {
@@ -109,7 +101,7 @@ public class BookingServiceImpl implements BookingService {
         BookingDto updatedBooking = mapper.bookingToDto(savedBooking);
         return new ResponseEntity<>(updatedBooking, HttpStatus.OK);
     }
-
+    @Transactional
     @Override
     public ResponseEntity<?> changeStatus(Long id, String status) {
         if(!bookingRepository.existsById(id)) {
@@ -121,7 +113,13 @@ public class BookingServiceImpl implements BookingService {
         BookingDto updatedBooking = mapper.bookingToDto(savedBooking);
         return new ResponseEntity<>(updatedBooking, HttpStatus.OK);
     }
-
+    @Transactional
+    @Override
+    public ResponseEntity<?> getUserBookings(Long userId) {
+        List<Booking> bookings = bookingRepository.getBookingByUserId(userId);
+        List<BookingDto> bookingDtos = bookings.stream().map(mapper::bookingToDto).toList();
+        return new ResponseEntity<>(bookingDtos, HttpStatus.OK);
+    }
 
     private boolean checkRoomIsAvailable(BookingRequest newBooking) {
         List<Booking> conflictingBookings = bookingRepository.findConflictingBookings(
@@ -132,14 +130,13 @@ public class BookingServiceImpl implements BookingService {
         return conflictingBookings.isEmpty();
     }
 
-
     private List<Long> checkRoomForExistence(List<Long> roomsId) {
         Set<Long> existingRoomIds = new HashSet<>(roomRepository.findExistingIds(roomsId));
-
         return roomsId.stream()
                 .filter(id -> !existingRoomIds.contains(id))
                 .toList();
     }
+
 
 
 }

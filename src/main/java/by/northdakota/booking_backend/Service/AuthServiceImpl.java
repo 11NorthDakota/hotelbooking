@@ -15,14 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import by.northdakota.booking_backend.Entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import by.northdakota.booking_backend.Entity.Role;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +30,9 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
 
+
     public ResponseEntity<?> createAuthToken(@RequestBody LoginUserDto loginUserDto) throws Exception {
         try{
-            System.out.println(loginUserDto.getUsername());
-            System.out.println(loginUserDto.getPassword());
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginUserDto.getUsername(), loginUserDto.getPassword()));
         }catch (BadCredentialsException e){
@@ -49,10 +46,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public ResponseEntity<?> createNewUser(@RequestBody RegistrationUserDto registrationUserDto) {
-        System.out.println(registrationUserDto.getPassword());
-        System.out.println(registrationUserDto.getConfirmPassword());
         if(!registrationUserDto.getPassword().equals(registrationUserDto.getConfirmPassword())){
-            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),"пароли не совпали"),
+            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),"Пароли не совпадают"),
                     HttpStatus.BAD_REQUEST);
         }
 
@@ -63,5 +58,4 @@ public class AuthServiceImpl implements AuthService {
         UserDto userDto = (UserDto) userService.createUser(registrationUserDto).getBody();
         return ResponseEntity.ok(userDto);
     }
-
 }
